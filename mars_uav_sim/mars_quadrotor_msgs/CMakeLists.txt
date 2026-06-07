@@ -1,85 +1,44 @@
-#-cmake_minimum_required(VERSION 2.4.6)
-#-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 3.5)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+project(mars_quadrotor_msgs)
 
-#-rosbuild_init()
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+        set(CMAKE_C_STANDARD 99)
+endif()
 
-#set the default path for built executables to the "bin" directory
-#-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-#-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+if(NOT CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD 14)
+endif()
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-#common commands for building c++ executables and libraries
-#-\rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+# Find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
-#-rosbuild_add_library(encode_msgs src/encode_msgs.cpp)
-#-rosbuild_add_link_flags(encode_msgs -Wl,--as-needed)
-
-#list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-#find_package(Eigen3 REQUIRED)
-
-#include_directories(${EIGEN3_INCLUDE_DIR})
-#-rosbuild_add_library(decode_msgs src/decode_msgs.cpp)
-#-rosbuild_add_link_flags(decode_msgs -Wl,--as-needed)
-
-#------------------------------------------------------------------
-cmake_minimum_required(VERSION 2.8.3)
-project(quadrotor_msgs)
-
-find_package(catkin REQUIRED COMPONENTS
-        #armadillo
-        roscpp
-        nav_msgs
-        geometry_msgs
-        message_generation
+# Collect message files
+set(msg_files
+        "ros2_msg/QuadrotorState.msg"
+        "ros2_msg/TrakingPerformance.msg"
+        "ros2_msg/PositionCommand.msg"
+        "ros2_msg/PolynomialTrajectory.msg"
+        "ros2_msg/MpcPositionCommand.msg"
+)
+# Generate interfaces
+rosidl_generate_interfaces(${PROJECT_NAME}
+        ${msg_files}
+        DEPENDENCIES std_msgs geometry_msgs
+        ADD_LINTER_TESTS
 )
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+# Export dependencies
+ament_export_dependencies(rosidl_default_runtime std_msgs geometry_msgs)
 
-include_directories(
-        ${catkin_INCLUDE_DIRS}
-        include
-)
-
-#
-add_message_files(
-        FILES
-        PositionCommand.msg
-        MpcPositionCommand.msg
-        PolynomialTrajectory.msg
-        TrakingPerformance.msg
-        QuadrotorState.msg
-)
-
-generate_messages(
-        DEPENDENCIES
-        geometry_msgs
-        nav_msgs
-)
-
-catkin_package(
-        #INCLUDE_DIRS include
-        LIBRARIES
-        #CATKIN_DEPENDS geometry_msgs nav_msgs
-        #DEPENDS system_lib
-        CATKIN_DEPENDS message_runtime
-)
-
-
+# Finalize package
+ament_package()

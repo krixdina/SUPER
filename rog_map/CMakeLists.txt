@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(rog_map)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -19,52 +20,78 @@ add_definitions(-DROOT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
 
 # Define the voxelize and raycasting method
 add_definitions(-DORIGIN_AT_CORNER)
+
 string(TOUPPER $ENV{ROS_DISTRO} ROS_VERSION)
 message(STATUS "ROS version: ${ROS_VERSION}")
 
-message("Using ROS1")
-# add a marco for ros1
-add_definitions(-DUSE_ROS1)
-find_package(catkin REQUIRED COMPONENTS
-        roscpp
-        std_msgs
-        pcl_ros
-        geometry_msgs
-        nav_msgs
-        message_generation
-        visualization_msgs
-        message_filters
-)
-find_package(Eigen3 REQUIRED)
+message("Using ROS2")
+add_definitions(-DUSE_ROS2)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(PCL REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
-catkin_package(
-        INCLUDE_DIRS include
-        LIBRARIES rog_map
-        CATKIN_DEPENDS roscpp rospy std_msgs
-        #  DEPENDS system_lib
-)
-
-include_directories(
-        SYSTEM
+set(includes
         include
-        ../../../devel/include
-        ${catkin_INCLUDE_DIRS}
-        ${Eigen3_INCLUDE_DIRS}
+        ${Eigen_INCLUDE_DIRS}
+        #            ${OpenCV_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
 )
 
-set(THIRD_PARTY
-        ${catkin_LIBRARIES}
+set(third_party_libs
+        #            ${OpenCV_LIBRARIES}
         ${PCL_LIBRARIES}
-        -ldw
         yaml-cpp
 )
 
+set(ros_libs
+        rclcpp
+        std_msgs
+        nav_msgs
+        geometry_msgs
+        visualization_msgs
+        pcl_conversions
+        tf2_ros
+)
+
+include_directories(
+        ${includes}
+)
+
 file(GLOB_RECURSE srcs CONFIGURE_DEPENDS src/*.cpp include/*.h include/*.hpp include/*.cpp)
+
 add_library(rog_map STATIC ${srcs})
 
 target_include_directories(rog_map PUBLIC include)
 target_link_libraries(rog_map PUBLIC
         ${THIRD_PARTY})
+
+
+ament_target_dependencies(${PROJECT_NAME} PUBLIC
+        ${ros_libs}
+)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+        ${third_party_libs}
+)
+
+
+install(TARGETS
+        ${PROJECT_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+)
+
+ament_export_libraries(${PROJECT_NAME}
+        ${third_party_libs}
+)
+ament_export_include_directories(${includes})
+install(DIRECTORY include/
+        DESTINATION include/
+)
+
+ament_package()

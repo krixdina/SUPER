@@ -1,3 +1,4 @@
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file(GLOB ROOT_SOURCE *.cpp)
 file(GLOB ROOT_INLINE *.inl)
 file(GLOB ROOT_HEADER *.hpp)
@@ -59,4 +60,3 @@ add_library(glm_shared SHARED ${ROOT_TEXT} ${ROOT_MD} ${ROOT_NAT}
 	${GTC_SOURCE}     ${GTC_INLINE}     ${GTC_HEADER}
 	${GTX_SOURCE}     ${GTX_INLINE}     ${GTX_HEADER}
 	${SIMD_SOURCE}    ${SIMD_INLINE}    ${SIMD_HEADER})
-

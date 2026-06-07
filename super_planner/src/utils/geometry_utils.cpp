@@ -268,7 +268,7 @@ Vec4f geometry_utils::translatePlane(const Vec4f& plane, const Vec3f& translatio
 
 void geometry_utils::normalizeNextYaw(const double& last_yaw, double& yaw) {
     double diff = last_yaw - yaw;
-    if (isnan(yaw)) {
+    if (std::isnan(yaw)) {
         yaw = last_yaw;
         return;
     }

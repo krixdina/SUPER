@@ -1,14 +1,32 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 project(marsim_render)
 
-set(CMAKE_CXX_STANDARD 17)
+if (NOT CMAKE_C_STANDARD)
+    set(CMAKE_C_STANDARD 99)
+endif ()
+if (NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+endif ()
+
+if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
+endif ()
+
+
 set(CMAKE_BUILD_TYPE Release)  # Options: Release, RelWithDebInfo
 set(CMAKE_CXX_FLAGS "-O3 -Wall")
+# FIXME! This is a temporary fix to suppress warnings from glad
+add_compile_options(-Wno-pedantic)
 #set(CMAKE_BUILD_TYPE Debug)
 #set(CMAKE_CXX_FLAGS  "-O -Wall -g")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # Add compiler flags to treat all warnings as errors
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -19,8 +37,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Enable warning level 4 and treat all warnings as errors for MSVC
     message(STATUS "MSVC detected, adding /W4 /WX")
     add_compile_options(/W4 /WX)
-endif()
-
+endif ()
 
 
 # Add preprocessor definitions
@@ -36,7 +53,8 @@ find_package(PCL REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-include_directories(
+
+set(includes
         include
         ${Eigen_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
@@ -47,23 +65,7 @@ include_directories(
         ${PCL_INCLUDE_DIRS}
 )
 
-catkin_package(
-        INCLUDE_DIRS include
-        LIBRARIES ${PROJECT_NAME}
-        CATKIN_DEPENDS roscpp
-        DEPENDS OpenCV
-)
-
-
-add_library(GLAD include/glad/glad.c)
-
-
-add_library(${PROJECT_NAME}
-        src/marsim_render.cpp
-)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC
-        ${catkin_LIBRARIES}
+set(third_party_libs
         ${OpenCV_LIBRARIES}
         ${Pangolin_LIBRARIES}
         ${OPENGL_LIBRARIES}
@@ -71,20 +73,47 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         ${glfw3_LIBRARIES}
         ${PCL_LIBRARIES}
         OpenMP::OpenMP_CXX
-        GLAD
         glfw
         dl
         yaml-cpp
 )
 
-
-
-
-
-add_executable(test_render
-    test/main.cpp
+set(ros_libs
+        rclcpp
+        std_msgs
 )
 
-target_link_libraries(test_render PUBLIC
+
+include_directories(
+        ${includes}
+)
+
+add_library(${PROJECT_NAME} SHARED
+        include/glad/glad.c
+        src/marsim_render.cpp
+)
+
+
+ament_target_dependencies(${PROJECT_NAME} PUBLIC
+        ${ros_libs}
+)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    ${third_party_libs}
+)
+
+install(TARGETS
         ${PROJECT_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
 )
+
+ament_export_libraries(${PROJECT_NAME}
+        ${third_party_libs}
+)
+ament_export_include_directories(${includes})
+install(DIRECTORY include/
+        DESTINATION include/
+)
+
+ament_package()

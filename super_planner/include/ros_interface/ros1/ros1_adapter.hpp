@@ -159,7 +159,7 @@ namespace ros_interface {
                 const tinycolormap::ColormapType &cmp = tinycolormap::ColormapType::Jet) {
             // * 1) Visualize the color
             double t_sum = traj.getTotalDuration();
-            if (t_sum < 1e-2 || isnan(t_sum) || traj.empty()) {
+            if (t_sum < 1e-2 || std::isnan(t_sum) || traj.empty()) {
                 std::cout << REDPURPLE << "[Trajectory::Visualize] ERROR, the total duration is too small" << RESET
                           << std::endl;
                 return;
@@ -296,7 +296,7 @@ namespace ros_interface {
             const auto &have_seed_line = poly.HaveSeedLine();
             const auto &seed_line = poly.seed_line;
 
-            if (isnan(planes.sum())) {
+            if (std::isnan(planes.sum())) {
                 printf(" -- [Poly] ERROR, try to visualize polytope with NaN, force return.\n");
                 return;
             }
@@ -325,7 +325,7 @@ namespace ros_interface {
             mesh.leftCols(oldTris.cols()) = oldTris;
             mesh.rightCols(curTris.cols()) = curTris;
 
-            if (isnan(mesh.sum())) {
+            if (std::isnan(mesh.sum())) {
                 printf(" -- [WARN] Trying to publish ill polytope.\n");
                 return;
             }
@@ -634,7 +634,7 @@ namespace ros_interface {
             visualization_msgs::Marker marker_ball;
             static int cnt = 0;
             Vec3f cur_pos = pt;
-            if (isnan(pt.x()) || isnan(pt.y()) || isnan(pt.z())) {
+            if (std::isnan(pt.x()) || std::isnan(pt.y()) || std::isnan(pt.z())) {
                 return;
             }
             marker_ball.header.frame_id = "world";
